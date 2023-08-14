@@ -18,6 +18,11 @@ import net.tinyallies.entity.ModEntities;
 import net.tinyallies.util.ModUtil;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import static net.tinyallies.util.ModUtil.spawnBabyFromEgg;
 
 @Mixin(Spider.class)
 public class SpiderMixin extends Monster {
@@ -32,18 +37,10 @@ public class SpiderMixin extends Monster {
 		return super.finalizeSpawn(serverLevelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
+
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand interactionHand) {
-		ItemStack itemStack = player.getItemInHand(interactionHand);
-		if (itemStack.is(this.getPickResult().getItem())) {
-			if (!this.level().isClientSide) {
-				Mob mob = ModEntities.SPIDEY.get().create(level());
-				mob.setPos(this.position());
-				this.level().addFreshEntity(mob);
-			}
-			return InteractionResult.SUCCESS;
-		}
-		return super.mobInteract(player, interactionHand);
+		return spawnBabyFromEgg(this, player.getItemInHand(interactionHand),ModEntities.SPIDEY.get());
 	}
 }
 

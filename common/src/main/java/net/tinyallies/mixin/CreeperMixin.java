@@ -22,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static net.tinyallies.util.ModUtil.spawnBabyFromEgg;
+
 @Mixin(Creeper.class)
 public class CreeperMixin extends Monster {
 	protected CreeperMixin(EntityType<? extends Monster> entityType, Level level) {
@@ -37,15 +39,7 @@ public class CreeperMixin extends Monster {
 
 	@Inject(at = @At("HEAD"), method = "mobInteract", cancellable = true)
 	public void mobInteract(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
-		ItemStack itemStack = player.getItemInHand(interactionHand);
-		if (itemStack.is(this.getPickResult().getItem())) {
-			if (!this.level().isClientSide) {
-				Mob mob = ModEntities.CREEPY.get().create(level());
-				mob.setPos(this.position());
-				this.level().addFreshEntity(mob);
-			}
-			cir.setReturnValue(InteractionResult.sidedSuccess(true));
-		}
+		cir.setReturnValue(spawnBabyFromEgg(this, player.getItemInHand(interactionHand), ModEntities.CREEPY.get()));
 	}
 }
 

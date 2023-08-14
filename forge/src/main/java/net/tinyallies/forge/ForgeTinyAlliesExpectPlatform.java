@@ -1,15 +1,15 @@
-package net.tinyallies.fabric;
+package net.tinyallies.forge;
 
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.tinyallies.TinyAlliesExpectPlatform;
 
 import java.nio.file.Path;
 
-public class ExampleExpectPlatformImpl {
+public class ForgeTinyAlliesExpectPlatform {
 	/**
 	 * This is our actual method to {@link TinyAlliesExpectPlatform#getConfigDirectory()}.
 	 */
 	public static Path getConfigDirectory() {
-		return FabricLoader.getInstance().getConfigDir();
+		return FMLPaths.CONFIGDIR.get();
 	}
 }

@@ -20,6 +20,8 @@ import net.tinyallies.util.ModUtil;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
+import static net.tinyallies.util.ModUtil.spawnBabyFromEgg;
+
 @Mixin(Skeleton.class)
 public class SkeletonMixin extends Monster {
 	protected SkeletonMixin(EntityType<? extends Monster> entityType, Level level) {
@@ -38,17 +40,7 @@ public class SkeletonMixin extends Monster {
 
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand interactionHand) {
-		ItemStack itemStack = player.getItemInHand(interactionHand);
-		if (itemStack.is(this.getPickResult().getItem())) {
-			if (!this.level().isClientSide) {
-				Mob mob = ModEntities.SKELLY.get().create(level());
-				mob.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
-				mob.setPos(this.position());
-				this.level().addFreshEntity(mob);
-			}
-			return InteractionResult.SUCCESS;
-		}
-		return super.mobInteract(player, interactionHand);
+		return spawnBabyFromEgg(this, player.getItemInHand(interactionHand),ModEntities.SKELLY.get());
 	}
 }
 

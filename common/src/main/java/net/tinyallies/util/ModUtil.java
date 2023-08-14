@@ -3,11 +3,14 @@ package net.tinyallies.util;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.tinyallies.entity.Creepy;
 import net.tinyallies.entity.EnderBoy;
 import net.tinyallies.entity.ModEntities;
@@ -22,22 +25,44 @@ public class ModUtil {
 			Map.entry(EntityType.SPIDER, ModEntities.SPIDEY.get()),
 			Map.entry(EntityType.ZOMBIE, ModEntities.ZOMBY.get()));
 
-	public static void babifyMob(Mob entityIn) {
-		if (babyficationList.containsKey(entityIn.getType())) {
-			Mob baby = entityIn.convertTo(babyficationList.get(entityIn.getType()), true);
-			baby.setHealth(entityIn.getHealth());
-			if (baby instanceof Creepy creeper) {
-				creeper.setPowered(((Creeper) entityIn).isPowered());
-				creeper.setSwellDir(((Creeper) entityIn).getSwellDir());
+	public static Mob babifyMob(Mob mob) {
+		EntityType<?> type = mob.getType();
+		Mob baby = null;
+		if (babyficationList.containsKey(type)) {
+			baby = mob.convertTo(babyficationList.get(mob.getType()), true);
+			baby.setHealth(mob.getHealth());
+			if (type.equals(EntityType.CREEPER)) {
+				((Creepy)baby).setPowered(((Creeper) mob).isPowered());
+				((Creepy)baby).setSwellDir(((Creeper) mob).getSwellDir());
 			}
-			else if (baby instanceof EnderBoy enderman) {
-				enderman.setCarriedBlock(((EnderMan) entityIn).getCarriedBlock());
-				enderman.setTarget(entityIn.getTarget());
+			else if (type.equals(EntityType.ENDERMAN)) {
+				((EnderBoy)baby).setCarriedBlock(((EnderMan) mob).getCarriedBlock());
+				baby.setTarget(mob.getTarget());
+			}
+			else if(type.equals(ModEntities.SKELLY.get()) && baby.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()){
+				baby.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
 			}
 		}
 		else {
-			entityIn.setBaby(true);
+			mob.setBaby(true);
 		}
+		return baby;
+	}
+
+	public static InteractionResult spawnBabyFromEgg(Mob mob, ItemStack itemStack, EntityType<?> type) {
+		if (itemStack.is(mob.getPickResult().getItem())) {
+			Level level = mob.level();
+			if (!level.isClientSide) {
+				Mob baby = (Mob) type.create(level);
+				baby.setPos(mob.position());
+				if(type.equals(ModEntities.SKELLY.get())){
+					baby.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
+				}
+				level.addFreshEntity(baby);
+			}
+			return InteractionResult.sidedSuccess(true);
+		}
+		return InteractionResult.PASS;
 	}
 
 	public static void babyfyModel(Iterable<ModelPart> headParts, Iterable<ModelPart> bodyParts, float headY, float headZ, PoseStack pPoseStack, VertexConsumer pBuffer, int pPackedLight, int pPackedOverlay, float pRed, float pGreen, float pBlue, float pAlpha) {
