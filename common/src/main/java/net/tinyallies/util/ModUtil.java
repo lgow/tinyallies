@@ -5,7 +5,10 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.item.ItemStack;
@@ -32,14 +35,14 @@ public class ModUtil {
 			baby = mob.convertTo(babyficationList.get(mob.getType()), true);
 			baby.setHealth(mob.getHealth());
 			if (type.equals(EntityType.CREEPER)) {
-				((Creepy)baby).setPowered(((Creeper) mob).isPowered());
-				((Creepy)baby).setSwellDir(((Creeper) mob).getSwellDir());
+				((Creepy) baby).setPowered(((Creeper) mob).isPowered());
+				((Creepy) baby).setSwellDir(((Creeper) mob).getSwellDir());
 			}
 			else if (type.equals(EntityType.ENDERMAN)) {
-				((EnderBoy)baby).setCarriedBlock(((EnderMan) mob).getCarriedBlock());
+				((EnderBoy) baby).setCarriedBlock(((EnderMan) mob).getCarriedBlock());
 				baby.setTarget(mob.getTarget());
 			}
-			else if(type.equals(ModEntities.SKELLY.get()) && baby.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()){
+			else if (type.equals(ModEntities.SKELLY.get()) && baby.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()) {
 				baby.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
 			}
 		}
@@ -50,16 +53,15 @@ public class ModUtil {
 	}
 
 	public static InteractionResult spawnBabyFromEgg(Mob mob, ItemStack itemStack, EntityType<?> type) {
-		if (itemStack.is(mob.getPickResult().getItem())) {
-			Level level = mob.level();
-			if (!level.isClientSide) {
-				Mob baby = (Mob) type.create(level);
-				baby.setPos(mob.position());
-				if(type.equals(ModEntities.SKELLY.get())){
-					baby.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
-				}
-				level.addFreshEntity(baby);
+		ItemStack pickResult = mob.getPickResult();
+		Level level = mob.level();
+		if (!level.isClientSide && pickResult != null && itemStack.is(pickResult.getItem())) {
+			Mob baby = (Mob) type.create(level);
+			baby.setPos(mob.position());
+			if (type.equals(ModEntities.SKELLY.get())) {
+				baby.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
 			}
+			level.addFreshEntity(baby);
 			return InteractionResult.sidedSuccess(true);
 		}
 		return InteractionResult.PASS;
